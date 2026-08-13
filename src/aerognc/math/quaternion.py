@@ -1,65 +1,98 @@
 import math
 from dataclasses import dataclass
-import numpy as np
 
+# Refactored Quaternion class to Quat class for consistency with the rest of the codebase.
+
+from dataclasses import dataclass
+import src.aerognc.Constants as CST
+
+import math
 
 @dataclass
-class Quaternion:
-    q0: float = 1
-    q1: float = 0
-    q2: float = 0
-    q3: float = 0
+class Quat:
+    w: float
+    x: float
+    y: float
+    z: float
 
-    def getVector(self) -> np.ndarray:
-        return np.array([self.q0, self.q1, self.q2, self.q3]).reshape((4,1))
+    def __post_init__(self):
+        # Ensure that the quaternion is normalized
+        norm = (self.w**2 + self.x**2 + self.y**2 + self.z**2)
 
-    def getConjugate(self) -> "Quaternion":
-        return Quaternion(self.q0, -self.q1, -self.q2, -self.q3)
+        if not math.isclose(norm, 1.0, rel_tol=1e-5):
+            raise ValueError("Quaternion must be normalized.")
 
-    def multiply(self, Quat2: "Quaternion"):
-        a0 = self.q0
-        b0 = Quat2.q0
-        a = np.array([self.q1, self.q2, self.q3]).reshape((3,1))
-        b = np.array([Quat2.q1, Quat2.q2, Quat2.q3]).reshape((3,1))
+    def multiply(self, other: "Quat") -> "Quat":
+        w = self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z
+        x = self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y
+        y = self.w * other.y - self.z * other.z + self.y * other.w + self.z * other.x
+        z = self.w * other.z + self.x * other.y - self.y * other.x + self.z * other.w
+        return Quat(w, x, y, z)
 
-        a0b0 = a0 * b0
-        ab = np.vdot(a, b)
+    def norm(self) -> float:
+        return (self.w**2 + self.x**2 + self.y**2 + self.z**2)
 
-        c0 = a0b0 - ab
+    def derivative(self, p: float, q: float, r: float) -> tuple[float, float, float, float]:
+        correction_gain = 1 - self.norm()
 
-        a0b = a0 * b
-        b0a = b0 * a
-        axb = cross(a, b)
+        w_dot = -0.5 * (self.x * p + self.y * q + self.z * r) + self.w * correction_gain
+        x_dot = 0.5 * (self.w * p + self.y * r - self.z * q) + self.x * correction_gain
+        y_dot = 0.5 * (self.w * q + self.z * p - self.x * r) + self.y * correction_gain
+        z_dot = 0.5 * (self.w * r + self.x * q - self.y * p) + self.z * correction_gain
 
-        c = a0b + b0a + axb
+        return (w_dot, x_dot, y_dot, z_dot)
 
-        return Quaternion(c0, c[0], c[1], c[2])
+    def conjugate(self) -> "Quat":
+        return Quat(self.w, -self.x, -self.y, -self.z)
 
-    @classmethod
-    def fromEuler(cls, Roll_rad: float, Pitch_rad: float, Yaw_rad: float) -> "Quaternion":
-        cosR = math.cos(Roll_rad/2)
-        sinR = math.sin(Roll_rad/2)
-        cosP = math.cos(Pitch_rad/2)
-        sinP = math.sin(Pitch_rad/2)
-        cosY = math.cos(Yaw_rad/2)
-        sinY = math.sin(Yaw_rad/2)
+    def inverse(self) -> "Quat":
+        return self.conjugate()  # For unit quaternions, the inverse is the conjugate
 
-        q0 = cosR*cosP*cosY + sinR*sinP*sinY
-        q1 = sinR*cosP*cosY - cosR*sinP*sinY
-        q2 = cosR*sinP*cosY + sinR*cosP*sinY
-        q3 = cosR*cosP*sinY - sinR*sinP*cosY
+    def rotate_vector(self, vx: float, vy: float, vz: float) -> tuple[float, float, float]:
+        # Extract the vector part of the quaternion
+        qx, qy, qz = self.x, self.y, self.z
+        qw = self.w
 
-        # Pass the calculated values directly into the constructor (cls)
-        return cls(q0, q1, q2, q3)
+        # Cross product: q_vec x v
+        cx = qy * vz - qz * vy
+        cy = qz * vx - qx * vz
+        cz = qx * vy - qy * vx
 
+        # Cross product: q_vec x (q_vec x v)
+        ccx = qy * cz - qz * cy
+        ccy = qz * cx - qx * cz
+        ccz = qx * cy - qy * cx
 
-def cross(a, b):
-    i = (a[1] * b[2] - a[2] * b[1])
-    j = -(a[0] * b[2] - a[2] * b[0])
-    k = (a[0] * b[1] - a[1] * b[0])
-    return np.array([i, j, k]).reshape((3, 1))
+        # v_rotated = v + 2w(q_vec x v) + 2(q_vec x (q_vec x v))
+        rx = vx + 2.0 * qw * cx + 2.0 * ccx
+        ry = vy + 2.0 * qw * cy + 2.0 * ccy
+        rz = vz + 2.0 * qw * cz + 2.0 * ccz
 
+        return (rx, ry, rz)
 
+    @staticmethod
+    def from_axis_angle(n1: float, n2: float, n3: float, angle: float) -> "Quat":
+        w = math.cos(angle/2)
+        x = n1 * math.sin(angle/2)
+        y = n2 * math.sin(angle/2)
+        z = n3 * math.sin(angle/2)
+        return Quat(w, x, y, z)
+
+    @staticmethod
+    def from_euler_angles(roll: float, pitch: float, yaw: float) -> "Quat":
+        cy = math.cos(yaw / 2)
+        sy = math.sin(yaw / 2)
+        cp = math.cos(pitch / 2)
+        sp = math.sin(pitch / 2)
+        cr = math.cos(roll / 2)
+        sr = math.sin(roll / 2)
+
+        w = cr * cp * cy + sr * sp * sy
+        x = sr * cp * cy - cr * sp * sy
+        y = cr * sp * cy + sr * cp * sy
+        z = cr * cp * sy - sr * sp * cy
+
+        return Quat(w, x, y, z)
 
 
 
