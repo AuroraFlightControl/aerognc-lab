@@ -1,6 +1,6 @@
 from typing import Callable, Protocol
 from dataclasses import dataclass
-from aerognc.core.state import VehicleState, StateDerivative
+from src.aerognc.core.state import VehicleState, StateDerivative
 
 StateEquation = Callable[[float, VehicleState], StateDerivative]
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from aerognc.math.Integrator import StateEquation, StateProjector
-from aerognc.core.state import VehicleState, StateDerivative
+from src.aerognc.math.Integrator import StateEquation, StateProjector
+from src.aerognc.core.state import VehicleState, StateDerivative
 
 
 @dataclass

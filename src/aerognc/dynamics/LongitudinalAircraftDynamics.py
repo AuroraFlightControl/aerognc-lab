@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 import numpy as np
 import math
-from aerognc.core.state import VehicleState, StateDerivative
-from aerognc.core.properties import MassProperties
+from src.aerognc.core.state import VehicleState, StateDerivative
+from src.aerognc.core.properties import MassProperties
 
 
 @dataclass
