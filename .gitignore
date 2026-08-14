@@ -1,0 +1,51 @@
+# =========================
+# Python Core
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# =========================
+# Virtual Environments
+# =========================
+venv/
+env/
+.env
+.venv/
+
+# =========================
+# Testing & Tooling
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# Jupyter Notebooks
+# =========================
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# =========================
+# Simulation Data & Logs
+# =========================
+# Ignore output data so you don't commit massive flight logs
+*.log
+*.csv
+*.parquet
+*.dat
+*.out
+
+# =========================
+# IDEs & OS Files
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
