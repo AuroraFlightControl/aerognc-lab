@@ -1,0 +1,16 @@
+from dataclasses import dataclass
+import numpy as np
+from numpy.typing import NDArray
+from typing import Protocol
+from src.aerognc.core.state import VehicleState
+
+@dataclass(frozen=True, slots=True)
+class AeroForcesMoments:
+    forces_body_lbs: NDArray[np.float64]
+    moments_body_ftlbs: NDArray[np.float64]
+
+
+class AerodynamicModel(Protocol):
+    def evaluate(self, state: VehicleState) -> AeroForcesMoments:
+        # TODO: Add enviroment and control inputs to the evaluate function
+        ...

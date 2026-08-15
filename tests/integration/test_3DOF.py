@@ -63,8 +63,8 @@ def test_longitudinal_dynamics_gravity_integration():
     # New U Velocity = 100 + (0 * 0.1) = 100.0 fps
     assert np.isclose(next_state.section("velocity_body_fps")[0], 100.0)
     
-    # New W Velocity = 0 + (32.17 * 0.1) = 3.217 fps (falling!)
-    assert np.isclose(next_state.section("velocity_body_fps")[1], 3.217)
+    # New W Velocity = 0 + (32.17405 * 0.1) = 3.217405 fps (falling!)
+    assert np.isclose(next_state.section("velocity_body_fps")[1], 3.217405)
     
     # Pitch and Pitch Rate remain completely undisturbed (no moments)
     assert np.isclose(next_state.scalar("pitch_rate_rad_s"), 0.0)

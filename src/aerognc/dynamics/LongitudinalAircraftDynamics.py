@@ -3,14 +3,17 @@ import numpy as np
 import math
 from src.aerognc.core.state import VehicleState, StateDerivative
 from src.aerognc.core.properties import MassProperties
+from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
+from src.aerognc.aerodynamics.AeroForcesMoments import AeroForcesMoments, AerodynamicModel
+from src.aerognc.aerodynamics.AirData import calculate_air_data
 import src.aerognc.Constants as CST
 
 
 @dataclass
 class LongitudinalAircraftDynamics:
     mass_properties: MassProperties
-    #atmosphere_model: object
-    #aerodynamic_model: object
+    atmosphere_model: AtmosphereModel
+    aerodynamic_model: AerodynamicModel
     #propulsion_model: object
     #actuator_model: object
 
@@ -31,17 +34,19 @@ class LongitudinalAircraftDynamics:
         mass = self.mass_properties.mass_slug
         Iyy = self.mass_properties.inertia_body_slug_ft2[1,1]
 
-
-
-        #atmosphere = self.atmosphere_model.evaluate(altitude_ft)
-
         # Calculate wind and air data.
+        atmosphere = self.atmosphere_model.calculate_ISA(altitude_ft)
+
+        air_data = calculate_air_data(state=state, ambient_density=atmosphere.density_slug_ft3)
 
         # Calculate actuator outputs.
 
         # Calculate propulsion forces.
 
         # Calculate aerodynamic forces and moments.
+
+        #aero_forces_moments = AerodynamicModel.evaluate(state=state)
+
         Fx = -mass * CST.ONE_G * math.sin(pitch)
         Fz = mass * CST.ONE_G * math.cos(pitch)
         M  = 0.0
