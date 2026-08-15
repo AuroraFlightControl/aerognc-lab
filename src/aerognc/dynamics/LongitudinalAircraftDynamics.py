@@ -45,11 +45,15 @@ class LongitudinalAircraftDynamics:
 
         # Calculate aerodynamic forces and moments.
 
-        #aero_forces_moments = AerodynamicModel.evaluate(state=state)
+        aero_forces_moments = self.aerodynamic_model.evaluate(state=state)
 
-        Fx = -mass * CST.ONE_G * math.sin(pitch)
-        Fz = mass * CST.ONE_G * math.cos(pitch)
-        M  = 0.0
+        aero_Fx = aero_forces_moments.forces_body_lbs[0]
+        aero_Fz = aero_forces_moments.forces_body_lbs[2]
+        aero_M = aero_forces_moments.moments_body_ftlbs[1]
+
+        Fx = -mass * CST.ONE_G * math.sin(pitch) + aero_Fx
+        Fz = mass * CST.ONE_G * math.cos(pitch) + aero_Fz
+        M  = aero_M
 
         # Calculate rigid-body derivatives.
 

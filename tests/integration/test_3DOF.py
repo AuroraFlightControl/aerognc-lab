@@ -6,6 +6,8 @@ from src.aerognc.core.state import VehicleState, StateLayout
 from src.aerognc.core.properties import MassProperties
 from src.aerognc.math.ForwardEulerIntegrator import ForwardEulerIntegrator
 from src.aerognc.dynamics.LongitudinalAircraftDynamics import LongitudinalAircraftDynamics
+from src.aerognc.aerodynamics.LinearModel import AeroVariableLayout, LinearAeroModel
+from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
 
 def test_longitudinal_dynamics_gravity_integration():
     # 1. Setup Mass Properties
@@ -28,6 +30,17 @@ def test_longitudinal_dynamics_gravity_integration():
         ("pitch_rate_rad_s", 1),   # index 4 (q)
         ("pitch_angle_rad", 1)     # index 5 (pitch)
     ])
+
+    # Vacuum Aerodynamics Model
+    blank_AeroLayout = AeroVariableLayout.from_variables([])
+    zero_aero_model = LinearAeroModel(
+                    layout=blank_AeroLayout,
+                    S_ref_ft2=10.0,
+                    c_bar_ft=1.0,
+                    b_span_ft=1.0,
+                    C0=np.zeros(6, dtype=np.float64),
+                    Jacobian=np.zeros((6, 0), dtype=np.float64)
+                )
     
     # Initial State: 
     # x=0, z=-5000 (5000 ft altitude)
@@ -37,7 +50,7 @@ def test_longitudinal_dynamics_gravity_integration():
     state = VehicleState(layout=layout, values=initial_values)
 
     # 3. Initialize Dynamics Model
-    dynamics = LongitudinalAircraftDynamics(mass_properties=mass_props)
+    dynamics = LongitudinalAircraftDynamics(mass_properties=mass_props, atmosphere_model=AtmosphereModel(), aerodynamic_model=zero_aero_model)
 
     # 4. Setup Integrator
     integrator = ForwardEulerIntegrator()
@@ -69,3 +82,4 @@ def test_longitudinal_dynamics_gravity_integration():
     # Pitch and Pitch Rate remain completely undisturbed (no moments)
     assert np.isclose(next_state.scalar("pitch_rate_rad_s"), 0.0)
     assert np.isclose(next_state.scalar("pitch_angle_rad"), 0.0)
+
