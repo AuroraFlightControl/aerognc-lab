@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Mapping, Sequence
+from typing import Mapping, Sequence, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -67,7 +67,8 @@ class VehicleState:
         object.__setattr__(self, "values", validated)
 
     def section(self, name: str) -> FloatVector:
-        return self.values[self.layout.get_slice(name)]
+        # Cast to FloatVector to satisfy numpy typing for sliced arrays
+        return cast(FloatVector, self.values[self.layout.get_slice(name)])
 
     def scalar(self, name: str) -> float:
         values = self.section(name)
