@@ -133,12 +133,12 @@ def test_linear_aero_math_execution():
     # 2. Construct the VehicleState layout (NOW WITH VELOCITY!)
     vehicle_layout = StateLayout.from_fields([
         ("a", 1), 
-        ("q", 1), 
+        ("body_rate_rad_s", 1), 
         ("velocity_body_fps", 3)
     ])
     
     # Provide a forward velocity of 100 fps to avoid divide-by-zero checks
-    state = build_mock_state(vehicle_layout, a=0.1, q=0.5, velocity_body_fps=[100.0, 0.0, 0.0])
+    state = build_mock_state(vehicle_layout, a=0.1, body_rate_rad_s=0.5, velocity_body_fps=[100.0, 0.0, 0.0])
     
     # 3. Evaluate
     result = model.evaluate(state)

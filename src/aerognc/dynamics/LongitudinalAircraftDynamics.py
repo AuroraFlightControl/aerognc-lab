@@ -7,6 +7,7 @@ from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
 from src.aerognc.aerodynamics.AeroForcesMoments import AeroForcesMoments, AerodynamicModel
 from src.aerognc.aerodynamics.AirData import calculate_air_data
 import src.aerognc.Constants as CST
+from typing import Optional
 
 
 @dataclass
@@ -14,8 +15,7 @@ class LongitudinalAircraftDynamics:
     mass_properties: MassProperties
     atmosphere_model: AtmosphereModel
     aerodynamic_model: AerodynamicModel
-    #propulsion_model: object
-    #actuator_model: object
+    #actuator_model: object # Includes Propulsion and Control Surfaces 
 
     def derivatives(
         self,
@@ -28,10 +28,10 @@ class LongitudinalAircraftDynamics:
         z       = state.section("position_ned_ft")[1]
         u       = state.section("velocity_body_fps")[0]
         w       = state.section("velocity_body_fps")[1]
-        q       = state.scalar("pitch_rate_rad_s")
-        pitch   = state.scalar("pitch_angle_rad")
+        q       = state.section("body_rate_rad_s")[0]
+        pitch   = state.section("attitude_angle_rad")[0]
 
-        mass = self.mass_properties.mass_slug
+        mass = self.mass_properties.mass_lbs / 32.174
         Iyy = self.mass_properties.inertia_body_slug_ft2[1,1]
 
         # Calculate wind and air data.

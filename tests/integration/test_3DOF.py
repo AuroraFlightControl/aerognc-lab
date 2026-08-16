@@ -12,7 +12,7 @@ from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
 def test_longitudinal_dynamics_gravity_integration():
     # 1. Setup Mass Properties
     mass_props = MassProperties(
-        mass_slug=100.0,
+        mass_lbs=100.0,
         inertia_body_slug_ft2=np.array([
             [1000.0, 0.0, 0.0],
             [0.0, 2000.0, 0.0],
@@ -27,8 +27,8 @@ def test_longitudinal_dynamics_gravity_integration():
     layout = StateLayout.from_fields([
         ("position_ned_ft", 2),    # indices 0, 1 (x, z)
         ("velocity_body_fps", 2),  # indices 2, 3 (u, w)
-        ("pitch_rate_rad_s", 1),   # index 4 (q)
-        ("pitch_angle_rad", 1)     # index 5 (pitch)
+        ("body_rate_rad_s", 1),   # index 4 (q)
+        ("attitude_angle_rad", 1)     # index 5 (pitch)
     ])
 
     # Vacuum Aerodynamics Model
@@ -80,6 +80,6 @@ def test_longitudinal_dynamics_gravity_integration():
     assert np.isclose(next_state.section("velocity_body_fps")[1], 3.217405)
     
     # Pitch and Pitch Rate remain completely undisturbed (no moments)
-    assert np.isclose(next_state.scalar("pitch_rate_rad_s"), 0.0)
-    assert np.isclose(next_state.scalar("pitch_angle_rad"), 0.0)
+    assert np.isclose(next_state.section("body_rate_rad_s")[0], 0.0)
+    assert np.isclose(next_state.section("attitude_angle_rad")[0], 0.0)
 

@@ -93,7 +93,7 @@ class SimulationExec:
             current_time_s = step_index * self.config.integration_dt_s
 
             def stateEquation(time_s: float, state: VehicleState) -> StateDerivative:
-                return self.dynamics.derivitives(time_s=time_s, state=state)
+                return self.dynamics.derivatives(time_s=time_s, state=state)
 
             new_state = self.integrator.step(equation=stateEquation, time_s=current_time_s, state=current_state, step_size_s=self.config.integration_dt_s)
 
@@ -116,10 +116,6 @@ class SimulationExec:
             if stop_reason is not None:
                 termination_reason = stop_reason
                 break
-
-
-
-
 
 
         return SimulationResult(

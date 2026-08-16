@@ -30,13 +30,6 @@ class LinearAeroModel:
     Jacobian: NDArray[np.float64] # Shape: (6,N) where N is the number of variables in the layout
 
     def evaluate(self, state: VehicleState, AtmoData: Optional[EnvData] = None) -> AeroForcesMoments:
-        # Extract the relevant variables from the state based on the layout
-        variables = np.asarray([state.scalar(var) for var in self.layout.variable_map.keys()], dtype=np.float64)
-        
-        # Compute the aerodynamic forces and moments using the linear model
-        aero_effects = self.C0 + self.Jacobian @ variables
-        
-        CD, CY, CL, Cl, Cm, Cn = aero_effects
 
         if AtmoData is not None:
             density_slug_ft3 = AtmoData.density_slug_ft3
@@ -45,9 +38,35 @@ class LinearAeroModel:
 
         airdata_packet = calculate_air_data(state=state, ambient_density=density_slug_ft3)
 
+
+        # Extract the relevant variables from the state based on the layout
+        variable_values = []
+        for var in self.layout.variable_map.keys():
+            if var == "a":
+                variable_values.append(airdata_packet.alpha_rad)
+            elif var == "b":
+                variable_values.append(airdata_packet.beta_rad)
+            elif var == "q":
+                variable_values.append(state.section("body_rate_rad_s")[0])
+            elif var == "p":
+                variable_values.append(state.section("body_rate_rad_s")[1])
+            elif var == "r":
+                variable_values.append(state.section("body_rate_rad_s")[3])
+            else:
+                variable_values.append(state.scalar(var))
+        
+
+        variables = np.asarray(variable_values, dtype=np.float64)
+
         Q = airdata_packet.dynamic_pressure_psf
         alpha = airdata_packet.alpha_rad
         beta = airdata_packet.beta_rad
+
+        # Compute the aerodynamic forces and moments using the linear model
+        aero_effects = self.C0 + self.Jacobian @ variables
+        
+        CD, CY, CL, Cl, Cm, Cn = aero_effects
+
         
         # Dimensionalize the Forces (F = Q * S * C)
         Drag = Q * self.S_ref_ft2 * CD

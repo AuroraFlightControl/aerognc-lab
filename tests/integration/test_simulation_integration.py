@@ -14,7 +14,7 @@ from src.aerognc.math.ForwardEulerIntegrator import ForwardEulerIntegrator
 
 @dataclass
 class Simple_Dynamics:
-    def derivitives(self, time_s: float, state: VehicleState) -> StateDerivative:
+    def derivatives(self, time_s: float, state: VehicleState) -> StateDerivative:
         x_dot = state.section("velocity_fps")[0]
         y_dot = state.section("velocity_fps")[1]
         return StateDerivative(layout=state.layout, values=np.asarray([x_dot, y_dot, 0.0, 0.0, 0.0, 0.0], dtype=np.float64))
