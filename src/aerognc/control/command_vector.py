@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Mapping, Sequence, cast
 
-import numpy as np
+import numpy as np  
 from numpy.typing import NDArray
 
 FloatVector = NDArray[np.float64]
