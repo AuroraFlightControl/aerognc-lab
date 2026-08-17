@@ -4,6 +4,7 @@ from src.aerognc.core.Parameters import Parameters
 import numpy as np
 from dataclasses import dataclass
 from typing import Optional
+import math
 
 
 class SimpleSAS:
@@ -22,9 +23,13 @@ class SimpleSAS:
 
     def update(self, time_s: float, state: VehicleState) -> CommandVector:
 
-        error = state.section("attitude_angle_rad")
+        error = state.section("body_rate_rad_s")[0]
 
-        elv_cmd = -error * self.params["pitch_Kp"]
+        elv_cmd = error * self.params["pitch_Kp"]
+
+        elv_limit = 25 * math.pi/180 # +/- 25 degrees
+
+        elv_cmd = [max(min(elv_cmd, elv_limit), -elv_limit)]
 
         return CommandVector(layout=self.layout, values=np.asarray(elv_cmd, dtype=np.float64))
 

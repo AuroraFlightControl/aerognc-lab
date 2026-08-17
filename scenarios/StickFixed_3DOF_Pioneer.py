@@ -35,8 +35,8 @@ def StickFixed_3DOF_Pioneer():
 
     initial_conditions = np.asarray([
         0.0,        # X Global Position [ft]
-        -100.0,     # Z Global Position [ft]
-        50.0,       # u Body Velocity [ft/s]
+        -1000.0,     # Z Global Position [ft]
+        100.0,       # u Body Velocity [ft/s]
         0.0,        # w Body Velocity [ft/s]
         0.0,        # q Body Angular Rate [rad/s]
         0.0         # Theta Pitch Angle [rad]
@@ -46,6 +46,7 @@ def StickFixed_3DOF_Pioneer():
 
     PIONEER_CONTROL_LAYOUT = CmdLayout.from_fields([
         ("de", 1),
+        
     ])
 
     
@@ -58,9 +59,9 @@ def StickFixed_3DOF_Pioneer():
 
     SIMPLE_SAS_PARAMS = {
         "pitch_Kp": {
-            "value": 1.0,
+            "value": 8.0,
             "min_value": 0.0,
-            "max_value": 5.0,
+            "max_value": 10.0,
             "increment": 0.01,
             "description": 'Pitch SAS Proportional Gain'
         }
@@ -78,10 +79,10 @@ def StickFixed_3DOF_Pioneer():
     PioneerMassModel = build_mass_properties_from_json(str(pioneer_path))
 
     sim_config = SimulationConfig(
-        duration_s=10.0,
-        integration_dt_s=0.01,
-        controller_dt_s=0.1,
-        logging_dt_s=0.1
+        duration_s=30.0,
+        integration_dt_s=0.001,
+        controller_dt_s=0.005,
+        logging_dt_s=0.001
         )
 
     longitudinal_dynamics = LongitudinalAircraftDynamics(

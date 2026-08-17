@@ -39,6 +39,10 @@ class LinearAeroModel:
 
         airdata_packet = calculate_air_data(state=state, ambient_density=density_slug_ft3)
 
+        V = airdata_packet.true_airspeed_fps
+        Q = airdata_packet.dynamic_pressure_psf
+        alpha = airdata_packet.alpha_rad
+        beta = airdata_packet.beta_rad
 
         # Extract the relevant variables from the state based on the layout
         variable_values = []
@@ -48,11 +52,16 @@ class LinearAeroModel:
             elif var == "b":
                 variable_values.append(airdata_packet.beta_rad)
             elif var == "q":
-                variable_values.append(state.section("body_rate_rad_s")[0])
+
+                q_rad_s = state.section("body_rate_rad_s")[0]
+
+                q_hat = (q_rad_s * self.c_bar_ft) / (2.0 * V)
+
+                variable_values.append(q_hat)
             elif var == "p":
                 variable_values.append(state.section("body_rate_rad_s")[1])
             elif var == "r":
-                variable_values.append(state.section("body_rate_rad_s")[3])
+                variable_values.append(state.section("body_rate_rad_s")[2])
             elif var == "de":
                 variable_values.append(cmd.scalar("de"))
             elif var == "da":
@@ -66,10 +75,6 @@ class LinearAeroModel:
         
 
         variables = np.asarray(variable_values, dtype=np.float64)
-
-        Q = airdata_packet.dynamic_pressure_psf
-        alpha = airdata_packet.alpha_rad
-        beta = airdata_packet.beta_rad
 
         # Compute the aerodynamic forces and moments using the linear model
         aero_effects = self.C0 + self.Jacobian @ variables
