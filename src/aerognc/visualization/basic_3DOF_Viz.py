@@ -132,6 +132,24 @@ def visualize(result: SimulationResult, state_layout: StateLayout, cmd_layout: C
 
     plt.tight_layout()
 
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+
+    # Convert to degrees
+    theta_deg = df_telemetry['state_attitude_angle_rad'] * (180 / np.pi)
+    de_deg_s = df_telemetry['Cmd_de'] * (180 / np.pi)
+
+    ax1.plot(df_telemetry.index, theta_deg, color='C1')
+    ax1.set_ylabel("Pitch Angle, $\\theta$ [deg]")
+    ax1.set_title("Pitch Dynamics over Time")
+    ax1.grid(True)
+
+    ax2.plot(df_telemetry.index, de_deg_s, color='C2')
+    ax2.set_ylabel("Elevator Cmd, $/delta_e$ [deg]")
+    ax2.set_xlabel("Time [s]")
+    ax2.grid(True)
+
+    plt.tight_layout()
+
 
 
 

@@ -14,6 +14,8 @@ from src.aerognc.math.ForwardEulerIntegrator import ForwardEulerIntegrator
 from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
 from src.aerognc.core.properties import build_mass_properties_from_json
 from src.aerognc.control.command_vector import CmdLayout, CommandVector
+from src.aerognc.control_design.SimpleSAS import SimpleSAS
+from src.aerognc.core.Parameters import Parameters
 import src.aerognc.core.StopConditions as Stop 
 from src.aerognc.visualization.basic_3DOF_Viz import visualize
 
@@ -51,27 +53,29 @@ def StickFixed_3DOF_Pioneer():
     PIONEER_AERO_LAYOUT = AeroVariableLayout.from_variables([
         "a",    # Angle of Attack
         "q",    # Pitch Rate
-        #"de",   # Elevator Command
+        "de",   # Elevator Command
         ])
 
+    SIMPLE_SAS_PARAMS = {
+        "pitch_Kp": {
+            "value": 1.0,
+            "min_value": 0.0,
+            "max_value": 5.0,
+            "increment": 0.01,
+            "description": 'Pitch SAS Proportional Gain'
+        }
+    }
 
+    ctrl_params = Parameters.from_dic(SIMPLE_SAS_PARAMS)
 
     base_dir = Path(__file__).resolve().parent.parent
     pioneer_path = base_dir / "aircraft" / "Linear_Airlib" / "IAI_Pioneer.json"
 
+
+
     PioneerAeroModel = build_linear_aero_from_json(str(pioneer_path), layout=PIONEER_AERO_LAYOUT)
 
     PioneerMassModel = build_mass_properties_from_json(str(pioneer_path))
-
-    class DummyController:
-        def __init__(self, layout: CmdLayout):
-            self.layout = layout
-
-        def reset(self, time_s: float) -> None:
-            pass
-
-        def update(self, time_s: float, state: VehicleState) -> CommandVector:
-            return CommandVector(layout=self.layout, values=np.zeros(shape=self.layout.size, dtype=np.float64))
 
     sim_config = SimulationConfig(
         duration_s=10.0,
@@ -92,7 +96,7 @@ def StickFixed_3DOF_Pioneer():
         config=sim_config,
         dynamics=longitudinal_dynamics,
         integrator=ForwardEulerIntegrator(),
-        controller=DummyController(layout=PIONEER_CONTROL_LAYOUT),
+        controller=SimpleSAS(layout=PIONEER_CONTROL_LAYOUT, params=ctrl_params),
         stop_conditions=(
             sim_progress_bar,
             Stop.check_ground_impact,

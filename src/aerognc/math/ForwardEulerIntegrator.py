@@ -1,18 +1,19 @@
 from dataclasses import dataclass
 from src.aerognc.math.Integrator import StateEquation, StateProjector
 from src.aerognc.core.state import VehicleState, StateDerivative
+from src.aerognc.control.command_vector import CommandVector
 
 
 @dataclass
 class ForwardEulerIntegrator:
     projector: StateProjector | None = None
 
-    def step(self, equation: StateEquation, time_s: float, state: VehicleState, step_size_s: float) -> VehicleState:
+    def step(self, equation: StateEquation, time_s: float, state: VehicleState, cmd: CommandVector, step_size_s: float) -> VehicleState:
 
         if step_size_s <= 0.0:
             raise ValueError("Integration step must be positive.")
 
-        derivitive = equation(time_s, state)
+        derivitive = equation(time_s, state, cmd)
 
         self._verify_layout(state, derivitive)
 

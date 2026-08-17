@@ -111,23 +111,28 @@ class SimulationExec:
         for step_index in range(self.config.total_integration_step):
             current_time_s = step_index * self.config.integration_dt_s
 
-            # harness to ensure the dynamics are represented as a state Equation function
-            def stateEquation(time_s: float, state: VehicleState) -> StateDerivative:
-                return self.dynamics.derivatives(time_s=time_s, state=state)
+            # Update Controller
+            if step_index == 1:
+                self.controller.reset(time_s=current_time_s)
+                current_command = self.controller.update(time_s=current_time_s, state=current_state)
+            else:
+                current_command = self.controller.update(time_s=current_time_s, state=current_state)
 
-            new_state = self.integrator.step(equation=stateEquation, time_s=current_time_s, state=current_state, step_size_s=self.config.integration_dt_s)
+            # harness to ensure the dynamics are represented as a state Equation function
+            def stateEquation(time_s: float, state: VehicleState, cmd: CommandVector) -> StateDerivative:
+                return self.dynamics.derivatives(time_s=time_s, state=state, cmd=cmd)
+
+            new_state = self.integrator.step(
+                equation=stateEquation, 
+                time_s=current_time_s, 
+                state=current_state, 
+                cmd=current_command,
+                step_size_s=self.config.integration_dt_s
+                )
 
 
             current_state = new_state             
             next_time_s = (step_index + 1) * self.config.integration_dt_s
-
-            # Update Controller
-            if step_index == 1:
-                current_command = self.controller.reset(time_s=current_time_s)
-            else:
-                current_command = self.controller.update(time_s=current_time_s, state=current_state)
-
-
 
             stop_reason = self.check_stop_conditions(time_s=next_time_s, state=current_state)
 

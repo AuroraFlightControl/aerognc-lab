@@ -6,6 +6,7 @@ from src.aerognc.core.properties import MassProperties
 from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
 from src.aerognc.aerodynamics.AeroForcesMoments import AeroForcesMoments, AerodynamicModel
 from src.aerognc.aerodynamics.AirData import calculate_air_data
+from src.aerognc.control.command_vector import CommandVector
 import src.aerognc.Constants as CST
 from typing import Optional
 
@@ -21,6 +22,7 @@ class LongitudinalAircraftDynamics:
         self,
         time_s: float,
         state: VehicleState,
+        cmd: CommandVector,
     ) -> StateDerivative:
         altitude_ft = -state.section("position_ned_ft")[1]
 
@@ -45,7 +47,7 @@ class LongitudinalAircraftDynamics:
 
         # Calculate aerodynamic forces and moments.
 
-        aero_forces_moments = self.aerodynamic_model.evaluate(state=state)
+        aero_forces_moments = self.aerodynamic_model.evaluate(state=state, cmd=cmd)
 
         aero_Fx = aero_forces_moments.forces_body_lbs[0]
         aero_Fz = aero_forces_moments.forces_body_lbs[2]

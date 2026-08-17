@@ -9,6 +9,7 @@ from src.aerognc.aerodynamics.AirData import AirData, calculate_air_data
 import json, math
 import src.aerognc.Constants as CST
 from src.aerognc.enviroment.AtmosphereModel import EnvData
+from src.aerognc.control.command_vector import CommandVector
 
 @dataclass(frozen=True)
 class AeroVariableLayout:
@@ -29,7 +30,7 @@ class LinearAeroModel:
     C0: NDArray[np.float64] # Shape: (6,)
     Jacobian: NDArray[np.float64] # Shape: (6,N) where N is the number of variables in the layout
 
-    def evaluate(self, state: VehicleState, AtmoData: Optional[EnvData] = None) -> AeroForcesMoments:
+    def evaluate(self, state: VehicleState, cmd: CommandVector, AtmoData: Optional[EnvData] = None) -> AeroForcesMoments:
 
         if AtmoData is not None:
             density_slug_ft3 = AtmoData.density_slug_ft3
@@ -52,6 +53,14 @@ class LinearAeroModel:
                 variable_values.append(state.section("body_rate_rad_s")[1])
             elif var == "r":
                 variable_values.append(state.section("body_rate_rad_s")[3])
+            elif var == "de":
+                variable_values.append(cmd.scalar("de"))
+            elif var == "da":
+                variable_values.append(cmd.scalar("da"))
+            elif var == "dr":
+                variable_values.append(cmd.scalar("dr"))
+            elif var == "df":
+                variable_values.append(cmd.scalar("df"))
             else:
                 variable_values.append(state.scalar(var))
         

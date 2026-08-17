@@ -3,6 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import Protocol
 from src.aerognc.core.state import VehicleState
+from src.aerognc.control.command_vector import CommandVector
 
 @dataclass(frozen=True, slots=True)
 class AeroForcesMoments:
@@ -11,6 +12,6 @@ class AeroForcesMoments:
 
 
 class AerodynamicModel(Protocol):
-    def evaluate(self, state: VehicleState) -> AeroForcesMoments:
+    def evaluate(self, state: VehicleState, cmd: CommandVector) -> AeroForcesMoments:
         # TODO: Add enviroment and control inputs to the evaluate function
         ...
