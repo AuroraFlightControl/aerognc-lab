@@ -7,6 +7,7 @@ from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
 from src.aerognc.aerodynamics.AeroForcesMoments import AeroForcesMoments, AerodynamicModel
 from src.aerognc.aerodynamics.AirData import calculate_air_data
 from src.aerognc.control.command_vector import CommandVector
+from src.aerognc.propulsion.PropulsionModel import PropulsionModel
 import src.aerognc.Constants as CST
 from typing import Optional
 
@@ -16,7 +17,7 @@ class LongitudinalAircraftDynamics:
     mass_properties: MassProperties
     atmosphere_model: AtmosphereModel
     aerodynamic_model: AerodynamicModel
-    #actuator_model: object # Includes Propulsion and Control Surfaces 
+    propulsion_model: PropulsionModel
 
     def derivatives(
         self,
@@ -41,9 +42,13 @@ class LongitudinalAircraftDynamics:
 
         air_data = calculate_air_data(state=state, ambient_density=atmosphere.density_slug_ft3)
 
-        # Calculate actuator outputs.
-
         # Calculate propulsion forces.
+
+        prop_forces_moments = self.propulsion_model.update(time_s=time_s, state=state, cmd=cmd, AtmoData=atmosphere)
+
+        prop_Fx = prop_forces_moments.forces_body_lbs[0]
+        prop_Fz = prop_forces_moments.forces_body_lbs[2]
+        prop_M = prop_forces_moments.moments_body_ftlbs[1]
 
         # Calculate aerodynamic forces and moments.
 
@@ -53,9 +58,9 @@ class LongitudinalAircraftDynamics:
         aero_Fz = aero_forces_moments.forces_body_lbs[2]
         aero_M = aero_forces_moments.moments_body_ftlbs[1]
 
-        Fx = -mass * CST.ONE_G * math.sin(pitch) + aero_Fx
-        Fz = mass * CST.ONE_G * math.cos(pitch) + aero_Fz
-        M  = aero_M
+        Fx = -mass * CST.ONE_G * math.sin(pitch) + aero_Fx + prop_Fx
+        Fz = mass * CST.ONE_G * math.cos(pitch) + aero_Fz + prop_Fz
+        M  = aero_M + prop_M
 
         # Calculate rigid-body derivatives.
 

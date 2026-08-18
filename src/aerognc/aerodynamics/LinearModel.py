@@ -3,7 +3,7 @@ import math
 from typing import Dict, Sequence, Optional
 import numpy as np
 from numpy.typing import NDArray
-from src.aerognc.aerodynamics.AeroForcesMoments import AeroForcesMoments
+from src.aerognc.core.ForcesMoments import ForcesMoments
 from src.aerognc.core.state import VehicleState
 from src.aerognc.aerodynamics.AirData import AirData, calculate_air_data
 import json, math
@@ -30,7 +30,7 @@ class LinearAeroModel:
     C0: NDArray[np.float64] # Shape: (6,)
     Jacobian: NDArray[np.float64] # Shape: (6,N) where N is the number of variables in the layout
 
-    def evaluate(self, state: VehicleState, cmd: CommandVector, AtmoData: Optional[EnvData] = None) -> AeroForcesMoments:
+    def evaluate(self, state: VehicleState, cmd: CommandVector, AtmoData: Optional[EnvData] = None) -> ForcesMoments:
 
         if AtmoData is not None:
             density_slug_ft3 = AtmoData.density_slug_ft3
@@ -106,7 +106,7 @@ class LinearAeroModel:
         forces_body_lbs = np.array([Fx, Fy, Fz], dtype=np.float64)
         moments_body_ftlbs = np.array([Roll_moment, Pitch_moment, Yaw_moment], dtype=np.float64)
         
-        return AeroForcesMoments(forces_body_lbs=forces_body_lbs, moments_body_ftlbs=moments_body_ftlbs)
+        return ForcesMoments(forces_body_lbs=forces_body_lbs, moments_body_ftlbs=moments_body_ftlbs)
 
 def build_linear_aero_from_json(json_filepath: str, layout: AeroVariableLayout) -> LinearAeroModel:
 
