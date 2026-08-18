@@ -9,6 +9,7 @@ import src.aerognc.core.StopConditions as Stop
 from src.aerognc.math.Integrator import Integrator
 from src.aerognc.dynamics.DynamicsModel import DynamicsModel
 from src.aerognc.control_design.Controller import Controller
+from src.aerognc.control.ControllerStatus import ControllerStatus
 
 StopCondition = Callable[[float, VehicleState], str | None]
 
@@ -83,6 +84,7 @@ class SimulationResult:
     time:               NDArray
     state_values:       NDArray
     command_values:     NDArray
+    status_history:     list[ControllerStatus]
     termination_reason: str
 
 
@@ -104,6 +106,7 @@ class SimulationExec:
         time_history: list[float] = [0.0]
         state_history: list[FloatVector] = [current_state.values.copy()]
         command_history: list[FloatVector] = [current_command.values.copy()]
+        status_history: list[ControllerStatus] = []
 
         termination_reason = "Completed Simulation Time."
 
@@ -114,9 +117,9 @@ class SimulationExec:
             # Update Controller
             if step_index == 1:
                 self.controller.reset(time_s=current_time_s)
-                current_command = self.controller.update(time_s=current_time_s, state=current_state)
+                current_command, ctrl_status = self.controller.update(time_s=current_time_s, state=current_state)
             else:
-                current_command = self.controller.update(time_s=current_time_s, state=current_state)
+                current_command, ctrl_status = self.controller.update(time_s=current_time_s, state=current_state)
 
             # harness to ensure the dynamics are represented as a state Equation function
             def stateEquation(time_s: float, state: VehicleState, cmd: CommandVector) -> StateDerivative:
@@ -144,6 +147,7 @@ class SimulationExec:
                 time_history.append(next_time_s)
                 state_history.append(current_state.values.copy())
                 command_history.append(current_command.values.copy()) # type: ignore
+                status_history.append(ctrl_status)
 
 
             if stop_reason is not None:
@@ -154,7 +158,8 @@ class SimulationExec:
         return SimulationResult(
             time=np.asarray(time_history, dtype=np.float64), 
             state_values=np.stack(state_history, axis=0), 
-            command_values=np.stack(command_history, axis=0), 
+            command_values=np.stack(command_history, axis=0),
+            status_history=status_history, 
             termination_reason=termination_reason)
 
     def check_stop_conditions(self, time_s: float, state: VehicleState) -> str | None:

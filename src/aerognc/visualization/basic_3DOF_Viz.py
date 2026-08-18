@@ -6,7 +6,9 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-
+from src.aerognc.control.ControllerStatus import package_Status
+from src.aerognc.math.Conversions import *
+import math
 
 def get_state_col_names(State_layout: StateLayout) -> list[str]:
     col_names = []
@@ -144,15 +146,36 @@ def visualize(result: SimulationResult, state_layout: StateLayout, cmd_layout: C
     ax1.grid(True)
 
     ax2.plot(df_telemetry.index, de_deg_s, color='C2')
-    ax2.set_ylabel("Elevator Cmd, $/delta_e$ [deg]")
+    ax2.set_ylabel("Elevator Cmd, $\\delta_e$ [deg]")
     ax2.set_xlabel("Time [s]")
     ax2.grid(True)
 
     plt.tight_layout()
 
+    status_df = package_Status(history=result.status_history)
 
 
-
+    if ("P_PID_Target" in status_df.columns) and ("P_PID_Actual" in status_df.columns):
+        print("Status Available: Generating Plot...")
+        
+        # 1. Explicitly declare a NEW figure
+        plt.figure(figsize=(10, 4))
+        
+        # 2. Plot both parameters
+        plt.plot(status_df.index, (180 / math.pi) * status_df["P_PID_Target"], label="Target", linestyle='--')
+        plt.plot(status_df.index, (180 / math.pi) * status_df["P_PID_Actual"], label="Actual")
+        
+        # 3. Format the new plot
+        plt.title("Controller Status: Pitch Tracking")
+        plt.xlabel("Time [s]")
+        plt.ylabel("Pitch Angle, $\\theta$ [deg]")
+        plt.grid(True)
+        plt.legend()
+        
+    else:
+        # Help yourself debug if the keys change later
+        print("\nSkipping Status Plot: Expected keys not found.")
+        print(f"Available keys are: {status_df.columns.tolist()}")
 
 
     plt.show()
