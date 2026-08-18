@@ -14,7 +14,7 @@ from src.aerognc.math.ForwardEulerIntegrator import ForwardEulerIntegrator
 from src.aerognc.enviroment.AtmosphereModel import AtmosphereModel
 from src.aerognc.core.properties import build_mass_properties_from_json
 from src.aerognc.control.command_vector import CmdLayout, CommandVector
-from src.aerognc.control_design.DummyController import DummyController
+from src.aerognc.control_design.SimpleSAS import SimpleSAS
 from src.aerognc.core.Parameters import Parameters
 from src.aerognc.propulsion.SimplePropulsion import SimplePropulsion
 import src.aerognc.core.StopConditions as Stop 
@@ -23,9 +23,9 @@ from tools.AutoTrim3DOF import find_trim_state
 
 
 
-def StickFixed_3DOF_Pioneer(target_V_fps: float, target_alt_ft: float):
+def SimpleSAS_3DOF_Pioneer_Autotrim(target_V_fps: float, target_alt_ft: float):
 
-    print("Starting Pioneer Londgitudinal 3-DoF Simulation: Stick Fixed....\n")
+    print("Starting Pioneer Londgitudinal 3-DoF Simulation: Simple SAS....\n")
 
     LONGITUDINAL_LAYOUT = StateLayout.from_fields(
     [
@@ -35,12 +35,12 @@ def StickFixed_3DOF_Pioneer(target_V_fps: float, target_alt_ft: float):
         ("attitude_angle_rad", 1)   # theta
         ])
 
+
     PIONEER_CONTROL_LAYOUT = CmdLayout.from_fields([
         ("de", 1),
-        ("THR", 1),        
+        ("THR", 1)
+        
     ])
-
-    
 
     PIONEER_AERO_LAYOUT = AeroVariableLayout.from_variables([
         "a",    # Angle of Attack
@@ -48,6 +48,17 @@ def StickFixed_3DOF_Pioneer(target_V_fps: float, target_alt_ft: float):
         "de",   # Elevator Command
         ])
 
+    SIMPLE_SAS_PARAMS = {
+        "pitch_Kp": {
+            "value": 8.0,
+            "min_value": 0.0,
+            "max_value": 10.0,
+            "increment": 0.01,
+            "description": 'Pitch SAS Proportional Gain'
+        }
+    }
+
+    ctrl_params = Parameters.from_dic(SIMPLE_SAS_PARAMS)
 
     base_dir = Path(__file__).resolve().parent.parent
     pioneer_path = base_dir / "aircraft" / "Linear_Airlib" / "IAI_Pioneer.json"
@@ -92,10 +103,10 @@ def StickFixed_3DOF_Pioneer(target_V_fps: float, target_alt_ft: float):
     trim_cmd = np.asarray([
         elv_cmd_trim,
         thr_cmd_trim,
-    ]) 
+    ])
 
-    initial_state = VehicleState(layout=LONGITUDINAL_LAYOUT, values=initial_conditions)
-    initial_cmd = CommandVector(layout=PIONEER_CONTROL_LAYOUT, values=trim_cmd)  
+    controller = SimpleSAS(layout=PIONEER_CONTROL_LAYOUT, params=ctrl_params)
+    controller.constant_throttle = thr_cmd_trim
 
     sim_progress_bar = Stop.SimulationProgressBar(sim_config.total_integration_step)
 
@@ -103,14 +114,17 @@ def StickFixed_3DOF_Pioneer(target_V_fps: float, target_alt_ft: float):
         config=sim_config,
         dynamics=longitudinal_dynamics,
         integrator=ForwardEulerIntegrator(),
-        controller=DummyController(layout=PIONEER_CONTROL_LAYOUT, trim_cmd = initial_cmd),
+        controller=controller,
         stop_conditions=(
             sim_progress_bar,
             Stop.check_ground_impact,
             )
-        )
+        )  
 
 
+
+    initial_state = VehicleState(layout=LONGITUDINAL_LAYOUT, values=initial_conditions)
+    initial_cmd = CommandVector(layout=PIONEER_CONTROL_LAYOUT, values=trim_cmd)
 
     result = simExec.run(initial_condition=initial_state, initial_cmd=initial_cmd)
 
@@ -128,7 +142,7 @@ def StickFixed_3DOF_Pioneer(target_V_fps: float, target_alt_ft: float):
 
 if __name__ == "__main__":
 
-    StickFixed_3DOF_Pioneer(
+    SimpleSAS_3DOF_Pioneer_Autotrim(
         target_V_fps=120.0,
         target_alt_ft=1000.0
     )

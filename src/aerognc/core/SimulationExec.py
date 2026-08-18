@@ -96,14 +96,14 @@ class SimulationExec:
     controller:         Controller
     stop_conditions:    tuple[StopCondition, ...] = field(default_factory=tuple)
 
-    def run(self, initial_condition: VehicleState) -> SimulationResult:
+    def run(self, initial_condition: VehicleState, initial_cmd: CommandVector) -> SimulationResult:
 
         current_state = initial_condition
-        current_command = np.asarray([0.0], dtype=np.float64) # TODO: Add controller interface
+        current_command = initial_cmd
 
         time_history: list[float] = [0.0]
         state_history: list[FloatVector] = [current_state.values.copy()]
-        command_history: list[FloatVector] = [current_command]
+        command_history: list[FloatVector] = [current_command.values.copy()]
 
         termination_reason = "Completed Simulation Time."
 

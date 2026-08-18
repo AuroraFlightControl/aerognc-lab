@@ -18,6 +18,8 @@ class SimpleSAS:
 
         self.params = params.get_values()
 
+        self.constant_throttle = 0.0
+
     def reset(self, time_s: float) -> None:
         pass
 
@@ -31,7 +33,17 @@ class SimpleSAS:
 
         elv_cmd = [max(min(elv_cmd, elv_limit), -elv_limit)]
 
-        return CommandVector(layout=self.layout, values=np.asarray(elv_cmd, dtype=np.float64))
+
+        cmd_values = np.zeros(self.layout.size, dtype=np.float64)
+        
+
+        if "de" in self.layout.slices:
+            cmd_values[self.layout.get_slice("de")] = elv_cmd
+            
+        if "THR" in self.layout.slices:
+            cmd_values[self.layout.get_slice("THR")] = self.constant_throttle
+
+        return CommandVector(layout=self.layout, values=cmd_values)
 
 
 

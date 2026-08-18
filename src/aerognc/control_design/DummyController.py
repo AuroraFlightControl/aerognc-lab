@@ -3,11 +3,12 @@ from src.aerognc.core.state import VehicleState
 import numpy as np
 
 class DummyController:
-    def __init__(self, layout: CmdLayout):
+    def __init__(self, layout: CmdLayout, trim_cmd: CommandVector):
         self.layout = layout
+        self.trim_cmd = trim_cmd
 
     def reset(self, time_s: float) -> None:
         pass
 
     def update(self, time_s: float, state: VehicleState) -> CommandVector:
-        return CommandVector(layout=self.layout, values=np.zeros(shape=self.layout.size, dtype=np.float64))
+        return self.trim_cmd
