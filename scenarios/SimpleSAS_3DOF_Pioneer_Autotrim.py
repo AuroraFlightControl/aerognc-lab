@@ -21,11 +21,15 @@ import src.aerognc.core.StopConditions as Stop
 from src.aerognc.visualization.basic_3DOF_Viz import visualize
 from tools.AutoTrim3DOF import find_trim_state
 
+# Logging
+from src.aerognc.core.Logging.Event_Logger import configure_logger, get_logger
 
+configure_logger(json_mode=False)
+log = get_logger(module_name="Scenario_SimpleSAS")
 
 def SimpleSAS_3DOF_Pioneer_Autotrim(target_V_fps: float, target_alt_ft: float):
 
-    print("Starting Pioneer Londgitudinal 3-DoF Simulation: Simple SAS....\n")
+    log.info("Starting Pioneer Londgitudinal 3-DoF Simulation: Simple SAS")
 
     LONGITUDINAL_LAYOUT = StateLayout.from_fields(
     [
@@ -108,7 +112,9 @@ def SimpleSAS_3DOF_Pioneer_Autotrim(target_V_fps: float, target_alt_ft: float):
     controller = SimpleSAS(layout=PIONEER_CONTROL_LAYOUT, params=ctrl_params)
     controller.constant_throttle = thr_cmd_trim
 
+    print("\n")
     sim_progress_bar = Stop.SimulationProgressBar(sim_config.total_integration_step)
+
 
     simExec = SimulationExec(
         config=sim_config,
@@ -119,30 +125,41 @@ def SimpleSAS_3DOF_Pioneer_Autotrim(target_V_fps: float, target_alt_ft: float):
             sim_progress_bar,
             Stop.check_ground_impact,
             )
-        )  
-
-
+        )
+          
 
     initial_state = VehicleState(layout=LONGITUDINAL_LAYOUT, values=initial_conditions)
     initial_cmd = CommandVector(layout=PIONEER_CONTROL_LAYOUT, values=trim_cmd)
 
-    result = simExec.run(initial_condition=initial_state, initial_cmd=initial_cmd)
+    try:
+        result = simExec.run(initial_condition=initial_state, initial_cmd=initial_cmd)
 
-    sim_progress_bar.close()
-    print(f"\nSimulation Complete")
-    print(f"Termination Reason: {result.termination_reason}")
-    print(f"Total Data Points Logged: {len(result.time)}")
+        sim_progress_bar.close()
+        print("\n")
+        log.info(f"Simulation Complete, Termination Reason: {result.termination_reason}")
 
-    visualize(
-        result=result, 
-        state_layout=LONGITUDINAL_LAYOUT, 
-        cmd_layout=PIONEER_CONTROL_LAYOUT
-        )
+        visualize(
+            result=result, 
+            state_layout=LONGITUDINAL_LAYOUT, 
+            cmd_layout=PIONEER_CONTROL_LAYOUT
+            )
+
+
+    except Exception as e:
+        sim_progress_bar.close()
+        print("\n")
+        log.error("simulation_crashed", error=str(e), exc_info=True)
+
+
 
 
 if __name__ == "__main__":
 
-    SimpleSAS_3DOF_Pioneer_Autotrim(
-        target_V_fps=120.0,
-        target_alt_ft=1000.0
-    )
+    try:
+        SimpleSAS_3DOF_Pioneer_Autotrim(
+            target_V_fps=120.0,
+            target_alt_ft=1000.0
+        )
+    except Exception as e:
+        print("\n")
+        log.error("simulation_failed", error=str(e), exc_info=True)

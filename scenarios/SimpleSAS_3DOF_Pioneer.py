@@ -20,7 +20,11 @@ from src.aerognc.propulsion.SimplePropulsion import SimplePropulsion
 import src.aerognc.core.StopConditions as Stop 
 from src.aerognc.visualization.basic_3DOF_Viz import visualize
 
+# Logging
+from src.aerognc.core.Logging.Event_Logger import configure_logger, get_logger
 
+configure_logger(json_mode=False)
+log = get_logger(module_name="Scenario_SimpleSAS")
 
 
 def SimpleSAS_3DOF_Pioneer():
@@ -104,7 +108,7 @@ def SimpleSAS_3DOF_Pioneer():
             )
         )   
 
-    result = simExec.run(initial_condition=initial_state)
+    result = simExec.run(initial_condition=initial_state, initial_cmd=CommandVector(layout=PIONEER_CONTROL_LAYOUT, values=np.zeros(PIONEER_CONTROL_LAYOUT.size, dtype=np.float64)))
 
     sim_progress_bar.close()
     print(f"\nSimulation Complete")

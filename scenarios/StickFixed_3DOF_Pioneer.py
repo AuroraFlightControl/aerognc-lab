@@ -21,7 +21,11 @@ import src.aerognc.core.StopConditions as Stop
 from src.aerognc.visualization.basic_3DOF_Viz import visualize
 from tools.AutoTrim3DOF import find_trim_state
 
+# Logging
+from src.aerognc.core.Logging.Event_Logger import configure_logger, get_logger
 
+configure_logger(json_mode=False)
+log = get_logger(module_name="Scenario_SimpleSAS")
 
 def StickFixed_3DOF_Pioneer(target_V_fps: float, target_alt_ft: float):
 

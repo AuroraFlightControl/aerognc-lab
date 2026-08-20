@@ -4,6 +4,9 @@ import math
 from src.aerognc.dynamics.DynamicsModel import DynamicsModel
 from src.aerognc.control.command_vector import CommandVector, CmdLayout
 from src.aerognc.core.state import VehicleState, StateLayout
+from src.aerognc.core.Logging.Event_Logger import get_logger
+
+log = get_logger(module_name="AutoTrim3DOF")
 
 def Longitudinal_trim_cost(
         free_vars: np.ndarray,
@@ -63,7 +66,7 @@ def find_trim_state(
         (0.0, 1.0)
     )
 
-    print(f"Trimming for V_fps = {target_V_fps}, and alt_ft = {target_alt_ft}...")
+    log.info(f"Trimming for V_fps = {target_V_fps}, and alt_ft = {target_alt_ft}")
 
     result = minimize(
         Longitudinal_trim_cost,
@@ -71,15 +74,15 @@ def find_trim_state(
         args=(target_V_fps, target_alt_ft, dynamics_model, state_layout, cmd_layout),
         method='SLSQP',
         bounds=bounds,
-        options={'ftol': 1e-9, 'disp': True}
+        options={'ftol': 1e-9}
         )
 
     if result.success:
         theta_trim, elv_trim, thr_trim = result.x 
-        print(f"Trim Successful!")
-        print(f"Alpha: {math.degrees(theta_trim):.2f} deg")
-        print(f"Elevator: {elv_trim:.4f}")
-        print(f"Throttle: {thr_trim:.4f}")
+        log.info(f"Trim Successful!")
+        log.info(f"Alpha: {math.degrees(theta_trim):.2f} deg")
+        log.info(f"Elevator: {elv_trim:.4f}")
+        log.info(f"Throttle: {thr_trim:.4f}")
 
         return theta_trim, elv_trim, thr_trim
     
