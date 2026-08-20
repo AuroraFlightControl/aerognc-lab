@@ -11,3 +11,11 @@ TEMP_F_MSL = 59
 DYNAMIC_VISC_MSL = 3.737e-7
 SPEED_OF_SOUND_MSL = 1116.47
 R_MSL = 1716.59
+
+
+
+def deg2rad(value: float) -> float:
+    return value * (PI_PRECISION / 180.0)
+
+def rad2deg(value: float) -> float:
+    return value * (180.0 / PI_PRECISION)
